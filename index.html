@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DMT-Freedom</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #e3f2fd; /* Pale Blue background */
+        font-family: Arial, sans-serif;
+      }
+
+      #canvas {
+        border: 1px solid #000;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Generative Art - Circles Pattern</h1>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <br />
+    <input id="seedInput" type="text" placeholder="Enter block" style="font-size: 16px; padding: 5px; width: 200px;" />
+    <br />
+    <div>
+      <button id="generateButton" style="font-size: 16px; padding: 5px 10px;">Generate</button>
+      <button id="downloadButton" style="font-size: 16px; padding: 5px 10px;">Download Image</button>
+    </div>
+    <script src="https://ordinals.com/content/c192f63c1990ee1377d51de1f5b6820eac412aa779d717b9497806a072ea49f6i0"></script>
+    <script>
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const seedInput = document.getElementById('seedInput');
+      const generateButton = document.getElementById('generateButton');
+      const downloadButton = document.getElementById('downloadButton');
+      const appData = {
+        seed: 0
+      };
+      const colorSchemes = [
+        { name: 'Warm Shades', colors: ['#d9ed92', '#b5e48c', '#99d98c', '#76c893'] },
+        { name: 'Pastel Dreams', colors: ['#f7f5dd', '#d5ecc2', '#7fcd91', '#5ca4a9'] },
+        { name: 'Autumn Vibes', colors: ['#ee6055', '#60d394', '#aaf683', '#ffd97d'] },
+        { name: 'Ocean Breeze', colors: ['#1b262c', '#0f4c75', '#3282b8', '#bbe1fa'] },
+        { name: 'Berry Blend', colors: ['#d8e2dc', '#ffe5d9', '#ffcad4', '#f4acb7'] },
+        { name: 'Sunset Hues', colors: ['#ff8b94', '#ffaaa6', '#ffd3b5', '#dcedc1'] },
+        { name: 'Earthy Tones', colors: ['#7d8491', '#9e768f', '#9fa4c4', '#b3cdd1'] },
+        { name: 'Lavender Fields', colors: ['#e2d1c3', '#bbc7c4', '#a3b18a', '#588157'] },
+        { name: 'Retro Flair', colors: ['#fd5e53', '#f9fcfb', '#32e0c4', '#2a2d34'] },
+        { name: 'Citrus Punch', colors: ['#ffbe0b', '#fb5607', '#ff006e', '#8338ec'] },
+        { name: 'Tropical Paradise', colors: ['#0e9aa7', '#3da4ab', '#f6cd61', '#fe8a71'] },
+        { name: 'Mint Chocolate', colors: ['#4a4e4d', '#0e9aa7', '#3da4ab', '#f6cd61'] },
+        { name: 'Vintage Charm', colors: ['#cb997e', '#eddcd2', '#fff1e6', '#f0efeb'] },
+        { name: 'Rustic Charm', colors: ['#e76f51', '#f4a261', '#e9c46a', '#2a9d8f'] },
+        { name: 'Serene Sky', colors: ['#e0ece4', '#e9f5db', '#fefee3', '#fcf5c7'] },
+        { name: 'Golden Hour', colors: ['#f8edeb', '#fcd5ce', '#fec89a', '#f9dcc4'] },
+        { name: 'Peacock Feathers', colors: ['#003049', '#d62828', '#f77f00', '#fcbf49'] },
+        { name: 'Cozy Cabin', colors: ['#606c38', '#283618', '#fefae0', '#dda15e'] },
+        { name: 'Vivid Violet', colors: ['#7400b8', '#6930c3', '#5e60ce', '#4ea8de'] },
+        { name: 'Desert Oasis', colors: ['#1a535c', '#4ecdc4', '#f7fff7', '#ff6b6b'] },
+        { name: 'Coastal Getaway', colors: ['#e0f8f7', '#c9fdd7', '#79d1c3', '#6892d5'] },
+        { name: 'Sunset Shore', colors: ['#ffe3e3', '#ffc2c2', '#ffa1a1', '#ff8080'] },
+        { name: 'Secret Garden', colors: ['#007f5f', '#2b9348', '#55a630', '#80b918'] },
+        { name: 'Sakura Blossom', colors: ['#f6bd60', '#f7ede2', '#f5cac3', '#84a59d'] },
+        { name: 'Art Deco', colors: ['#ffcc00', '#ff6600', '#ff0066', '#cc00ff'] },
+        { name: 'Under the Sea', colors: ['#335c67', '#fff3b0', '#e09f3e', '#9e2a2b'] },
+        { name: 'Ethereal Elegance', colors: ['#f0a6ca', '#b18fcf', '#6a68b0', '#4a437b'] },
+        { name: 'Royal Affair', colors: ['#ffc300', '#ff5733', '#c70039', '#900c3f'] },
+        { name: 'Boho Chic', colors: ['#d4a5a5', '#f8e2e2', '#dfddc7', '#a5a58d'] },
+        { name: 'Urban Jungle', colors: ['#003049', '#d62828', '#f77f00', '#fcbf49'] },
+        { name: 'Festival Fun', colors: ['#ef476f', '#ffd166', '#06d6a0', '#118ab2'] },
+        { name: 'Spring Fling', colors: ['#ffbe0b', '#fb5607', '#ff006e', '#8338ec'] },
+        { name: 'Neon Nights', colors: ['#4a4e69', '#9a8c98', '#c9ada7', '#f2e9e4'] },
+        { name: 'Classic Elegance', colors: ['#343a40', '#495057', '#6c757d', '#adb5bd'] },
+        { name: 'Vintage Rose', colors: ['#f7cac9', '#f4a261', '#e2b8a3', '#a18a7a'] },
+        { name: 'Galactic Night', colors: ['#343a40', '#6c757d', '#adb5bd', '#ced4da'] }
+      ];
+
+      function getRandomColorScheme() {
+        const index = Math.floor(Math.random() * colorSchemes.length);
+        return colorSchemes[index];
+      }
+
+      function generateCirclesArt(rng) {
+        const numCircles = 100;
+        const colorScheme = getRandomColorScheme().colors;
+
+        for (let i = 0; i < numCircles; i++) {
+          const x = Math.floor(rng() * canvas.width);
+          const y = Math.floor(rng() * canvas.height);
+          const radius = Math.floor(rng() * 30) + 10; // Smaller radius for more defined circles
+          const color = colorScheme[Math.floor(rng() * colorScheme.length)];
+
+          ctx.beginPath();
+          ctx.arc(x, y, radius, 0, 2 * Math.PI);
+          ctx.fillStyle = color; // Solid color
+          ctx.globalAlpha = 1; // No opacity
+          ctx.fill();
+        }
+      }
+
+      function generateArt() {
+        const block = seedInput.value || Math.floor(Math.random() * 1000000);
+        const rng = new Math.seedrandom(block);
+        appData.seed = block;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        generateCirclesArt(rng);
+      }
+
+      function downloadImage() {
+        const link = document.createElement('a');
+        link.download = `circles_art_${appData.seed}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      }
+
+      generateButton.addEventListener('click', generateArt);
+      downloadButton.addEventListener('click', downloadImage);
+
+      // Initial art generation
+      generateArt();
+    </script>
+  </body>
+</html>
